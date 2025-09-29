@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -227,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                   point: userMarker,
                   width: 80,
                   height: 80,
-                  child: _MapPin(
+                  builder: (context) => _MapPin(
                     color: theme.colorScheme.primary,
                     icon: Icons.person_pin_circle_rounded,
                     label: 'You',
@@ -243,12 +241,68 @@ class _HomePageState extends State<HomePage> {
                 point: vendorPoint,
                 width: 160,
                 height: 120,
-                child: _VendorMarker(
-                  vendor: vendor,
-                  isSelected: isSelected,
-                  onTap: () => _showVendorDetails(vendor),
-                  isDistanceLoading: _isDistanceLoading,
-                ),
+                builder: (context) {
+                  final shortDistance = vendor.distanceText?.split(' ').take(2).join(' ');
+                  final shortDuration = vendor.durationText?.split(' ').take(2).join(' ');
+
+                  return GestureDetector(
+                    onTap: () => _showVendorDetails(vendor),
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 250),
+                      scale: isSelected ? 1.05 : 1,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (vendor.distanceText != null && vendor.durationText != null)
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 250),
+                              opacity: _isDistanceLoading ? 0.4 : 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      shortDistance ?? vendor.distanceText!,
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      shortDuration ?? vendor.durationText!,
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 10),
+                          _MapPin(
+                            color: theme.colorScheme.error,
+                            icon: Icons.storefront_rounded,
+                            label: vendor.name,
+                            isSelected: isSelected,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             }).toList(),
           ),
@@ -653,7 +707,7 @@ class _TrianglePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = color.withOpacity(0.8);
-    final path = ui.Path()
+    final path = Path()
       ..moveTo(0, 0)
       ..lineTo(size.width / 2, size.height)
       ..lineTo(size.width, 0)
@@ -663,85 +717,6 @@ class _TrianglePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TrianglePainter oldDelegate) => oldDelegate.color != color;
-}
-
-class _VendorMarker extends StatelessWidget {
-  const _VendorMarker({
-    required this.vendor,
-    required this.isSelected,
-    required this.onTap,
-    required this.isDistanceLoading,
-  });
-
-  final Vendor vendor;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final bool isDistanceLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final shortDistance = vendor.distanceText?.split(' ').take(2).join(' ');
-    final shortDuration = vendor.durationText?.split(' ').take(2).join(' ');
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 250),
-        scale: isSelected ? 1.05 : 1,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (vendor.distanceText != null && vendor.durationText != null)
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 250),
-                opacity: isDistanceLoading ? 0.4 : 1,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        shortDistance ?? vendor.distanceText!,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        shortDuration ?? vendor.durationText!,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 10),
-            _MapPin(
-              color: theme.colorScheme.error,
-              icon: Icons.storefront_rounded,
-              label: vendor.name,
-              isSelected: isSelected,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _VendorCard extends StatelessWidget {
