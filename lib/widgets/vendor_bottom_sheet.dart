@@ -24,7 +24,7 @@ class VendorBottomSheet extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.08),
+            color: theme.colorScheme.shadow.withAlpha((0.08 * 255).round()),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -174,9 +174,9 @@ class _ChipInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withAlpha((0.4 * 255).round())),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
