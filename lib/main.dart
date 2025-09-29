@@ -75,6 +75,7 @@ class _HomePageState extends State<HomePage> {
   String? _errorMessage;
 
   StreamSubscription<MapEvent>? _mapSubscription;
+  int _distanceRequestId = 0;
 
   @override
   void initState() {
@@ -104,13 +105,14 @@ class _HomePageState extends State<HomePage> {
       final userLocation = position ?? _fallbackLocation;
       final vendors = await _vendorService.fetchVendors();
 
+      if (!mounted) return;
       setState(() {
         _userLocation = userLocation;
         _vendors = vendors;
       });
 
-      await _updateVendorDistances(userLocation);
       _moveCamera(userLocation, zoom: 6.5);
+      unawaited(_updateVendorDistances(userLocation, vendors: vendors));
     } on Exception catch (error) {
       setState(() {
         _errorMessage = error.toString();
@@ -124,31 +126,50 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _updateVendorDistances(LatLng origin) async {
-    if (!mounted) return;
+  Future<void> _updateVendorDistances(
+    LatLng origin, {
+    List<Vendor>? vendors,
+  }) async {
+    final targetVendors = List<Vendor>.from(vendors ?? _vendors);
+    final requestId = ++_distanceRequestId;
+    if (!mounted || targetVendors.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isDistanceLoading = false;
+          _vendors = targetVendors;
+        });
+      }
+      return;
+    }
+
     setState(() {
       _isDistanceLoading = true;
     });
 
-    final List<Vendor> enriched = <Vendor>[];
-    for (final vendor in _vendors) {
-      final info = await _distanceService.fetchDistance(
-        origin: origin,
-        destination: LatLng(vendor.latitude, vendor.longitude),
-      );
-      enriched.add(
-        vendor.copyWith(
+    try {
+      final enriched = await Future.wait(targetVendors.map((vendor) async {
+        final info = await _distanceService.fetchDistance(
+          origin: origin,
+          destination: LatLng(vendor.latitude, vendor.longitude),
+        );
+        return vendor.copyWith(
           distanceText: info?.distanceText,
           durationText: info?.durationText,
-        ),
-      );
-    }
+        );
+      }));
 
-    if (!mounted) return;
-    setState(() {
-      _vendors = enriched;
-      _isDistanceLoading = false;
-    });
+      if (!mounted || requestId != _distanceRequestId) return;
+      setState(() {
+        _vendors = enriched;
+        _isDistanceLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _distanceRequestId) return;
+      setState(() {
+        _isDistanceLoading = false;
+        _vendors = targetVendors;
+      });
+    }
   }
 
   void _moveCamera(LatLng position, {double zoom = 9}) {
