@@ -1,0 +1,50 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub-cache/
+build/
+**/Generated.xcconfig
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code related
+.vscode/
+
+# Mac related
+.DS_Store
+
+# Android related
+**/gradle-wrapper.jar
+**/gradle-wrapper.properties
+**/gradlew
+**/gradlew.bat
+**/local.properties
+**/GeneratedPluginRegistrant.java
+**/key.properties
+
+# iOS related
+**/Pods/
+**/Runner.xcworkspace/
+**/Flutter/Flutter.framework
+**/Flutter/Flutter.podspec
+**/ServiceDefinitions.json
+**/Runner/GeneratedPluginRegistrant.*
+
+# Linux related
+linux/flutter/
+
+# Windows related
+windows/flutter/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
